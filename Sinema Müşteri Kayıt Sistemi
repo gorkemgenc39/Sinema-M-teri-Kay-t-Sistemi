@@ -1,0 +1,204 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+// Temel sınıf
+abstract class BaseEntity {
+    private int id;
+    private String name;
+
+    public BaseEntity(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public abstract void bilgiGoster(); // Polymorphism için ortak metot
+}
+
+// Müşteri sınıfı
+class Musteri extends BaseEntity {
+    public Musteri(int id, String name) {
+        super(id, name);
+    }
+
+    @Override
+    public void bilgiGoster() {
+        System.out.println("Müşteri ID: " + getId() + ", İsim: " + getName());
+    }
+}
+
+// Film sınıfı
+class Film {
+    private String ad;
+    private int sure; // dakika cinsinden
+    private String tur;
+
+    public Film(String ad, int sure, String tur) {
+        this.ad = ad;
+        this.sure = sure;
+        this.tur = tur;
+    }
+
+    public String getAd() {
+        return ad;
+    }
+
+    public int getSure() {
+        return sure;
+    }
+
+    public String getTur() {
+        return tur;
+    }
+
+    public void bilgiGoster() {
+        System.out.println("Film Adı: " + ad + ", Süresi: " + sure + " dk, Tür: " + tur);
+    }
+}
+
+// Interface tanımı
+interface IKayit {
+    void musteriEkle(Musteri musteri);
+
+    void bilgiGoster();
+}
+
+// Salon sınıfı
+class Salon extends BaseEntity implements IKayit {
+    private Film oynatilanFilm;
+    private List<Musteri> musteriler;
+
+    public Salon(int id, String name, Film oynatilanFilm) {
+        super(id, name);
+        this.oynatilanFilm = oynatilanFilm;
+        this.musteriler = new ArrayList<>();
+    }
+
+    public void musteriEkle(Musteri musteri) {
+        musteriler.add(musteri);
+    }
+
+    public Film getOynatilanFilm() {
+        return oynatilanFilm;
+    }
+
+    public List<Musteri> getMusteriler() {
+        return musteriler;
+    }
+
+    @Override
+    public void bilgiGoster() {
+        System.out.println("Salon Adı: " + getName());
+        oynatilanFilm.bilgiGoster();
+        System.out.println("Kayıtlı Müşteriler:");
+        for (Musteri musteri : musteriler) {
+            System.out.println("- " + musteri.getName());
+        }
+    }
+}
+
+// Ana program
+public class SinemaSistemi {
+    public static void main(String[] args) {
+        List<Film> filmler = new ArrayList<>();
+        List<Salon> salonlar = new ArrayList<>();
+        List<Musteri> musteriler = new ArrayList<>();
+
+        Scanner scanner = new Scanner(System.in);
+
+        while (true) {
+            System.out.println("\n--- Sinema Müşteri Kayıt Sistemi ---");
+            System.out.println("1. Yeni Film Ekle");
+            System.out.println("2. Yeni Salon Ekle");
+            System.out.println("3. Yeni Müşteri Ekle");
+            System.out.println("4. Salon Bilgisi Göster");
+            System.out.println("5. Çıkış");
+            System.out.print("Seçiminiz: ");
+            int secim = scanner.nextInt();
+            scanner.nextLine(); // tamponu temizle
+
+            switch (secim) {
+                case 1:
+                    System.out.print("Film Adı: ");
+                    String filmAdi = scanner.nextLine();
+                    System.out.print("Film Süresi (dakika): ");
+                    int sure = scanner.nextInt();
+                    scanner.nextLine();
+                    System.out.print("Film Türü: ");
+                    String tur = scanner.nextLine();
+                    filmler.add(new Film(filmAdi, sure, tur));
+                    System.out.println("Film başarıyla eklendi.");
+                    break;
+
+                case 2:
+                    if (filmler.isEmpty()) {
+                        System.out.println("Önce bir film eklemelisiniz!");
+                        break;
+                    }
+                    System.out.print("Salon Adı: ");
+                    String salonAdi = scanner.nextLine();
+                    System.out.println("Mevcut Filmler:");
+                    for (int i = 0; i < filmler.size(); i++) {
+                        System.out.println(i + 1 + ". " + filmler.get(i).getAd());
+                    }
+                    System.out.print("Oynatılacak Filmin Numarası: ");
+                    int filmIndex = scanner.nextInt() - 1;
+                    scanner.nextLine();
+                    if (filmIndex >= 0 && filmIndex < filmler.size()) {
+                        salonlar.add(new Salon(salonlar.size() + 1, salonAdi, filmler.get(filmIndex)));
+                        System.out.println("Salon başarıyla eklendi.");
+                    } else {
+                        System.out.println("Geçersiz film seçimi.");
+                    }
+                    break;
+
+                case 3:
+                    if (salonlar.isEmpty()) {
+                        System.out.println("Önce bir salon eklemelisiniz!");
+                        break;
+                    }
+                    System.out.print("Müşteri Adı: ");
+                    String musteriAdi = scanner.nextLine();
+                    Musteri musteri = new Musteri(musteriler.size() + 1, musteriAdi);
+                    musteriler.add(musteri);
+
+                    System.out.println("Müşteri için salon seçin:");
+                    for (int i = 0; i < salonlar.size(); i++) {
+                        System.out.println(i + 1 + ". " + salonlar.get(i).getName());
+                    }
+                    int salonIndex = scanner.nextInt() - 1;
+                    scanner.nextLine();
+                    if (salonIndex >= 0 && salonIndex < salonlar.size()) {
+                        salonlar.get(salonIndex).musteriEkle(musteri);
+                        System.out.println("Müşteri başarıyla salona eklendi.");
+                    } else {
+                        System.out.println("Geçersiz salon seçimi.");
+                    }
+                    break;
+
+                case 4:
+                    for (Salon salon : salonlar) {
+                        salon.bilgiGoster();
+                        System.out.println("---------------------");
+                    }
+                    break;
+
+                case 5:
+                    System.out.println("Çıkış yapılıyor...");
+                    scanner.close();
+                    return;
+
+                default:
+                    System.out.println("Geçersiz seçim, tekrar deneyin.");
+            }
+        }
+    }
+}
